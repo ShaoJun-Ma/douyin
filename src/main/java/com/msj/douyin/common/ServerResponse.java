@@ -34,4 +34,8 @@ public class ServerResponse{
     public static ServerResponse createSuccess(String msg,Object data){
         return new ServerResponse(ResponseConst.SUCCESS_CODE,msg,data);
     }
+
+    public static ServerResponse createFail(String msg,Object data){
+        return new ServerResponse(ResponseConst.ERROR_CODE,msg,data);
+    }
 }

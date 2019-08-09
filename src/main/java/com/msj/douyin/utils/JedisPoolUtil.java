@@ -21,7 +21,7 @@ public class JedisPoolUtil {
         return jedis;
     }
 
-    //归还jedis对象到连接池中
+    //3、归还jedis对象到连接池中
     public static void close(){
         if(jedis != null){
             jedis.close();

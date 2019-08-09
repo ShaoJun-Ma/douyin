@@ -12,8 +12,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
+import org.springframework.web.multipart.MultipartFile;
 import redis.clients.jedis.Jedis;
 
+import javax.servlet.http.HttpServletRequest;
+import java.io.File;
+import java.io.IOException;
 
 
 @Slf4j
@@ -22,6 +26,10 @@ public class UsersServiceImpl implements UsersService{
 
     @Autowired
     private UsersMapper usersMapper;
+
+    //获取连接池jedis对象
+    @Autowired
+    private Jedis jedis;
 
     @Transactional
     @Override
@@ -50,8 +58,6 @@ public class UsersServiceImpl implements UsersService{
         }
         //将对象转化为json格式（json是字符串）
         String value = new Gson().toJson(usersOne);
-        //获取连接池jedis对象
-        Jedis jedis = JedisPoolUtil.getJedis();
         Long key = System.currentTimeMillis();
         jedis.set(String.valueOf(key),value);//这里需要的参数都是字符串类型
         //归还jedis对象到连接池
@@ -61,11 +67,26 @@ public class UsersServiceImpl implements UsersService{
 
     @Transactional
     @Override
-    public ServerResponse findSelf(String key) {
-        //获取连接池jedis对象
-        Jedis jedis = JedisPoolUtil.getJedis();
+    public ServerResponse findSelf(HttpServletRequest request) {
+        String key = request.getHeader("userId");
         String users = jedis.get(key);
         Users data = new Gson().fromJson(users, Users.class);
-        return ServerResponse.createSuccess(ResponseConst.MINE_SUCCESS_MSG,data);
+        return ServerResponse.createSuccess(ResponseConst.MINE_SUCCESS_MSG,data);//获取个人信息成功
+    }
+
+    @Override
+    public ServerResponse changeFace(MultipartFile mfile,HttpServletRequest request) throws IOException {
+        File file = new File("D:/douyin/"+mfile.getOriginalFilename());
+        File parentFile = file.getParentFile();
+        parentFile.mkdirs();
+        mfile.transferTo(file);
+        String key = request.getHeader("userId");
+        String users = jedis.get(key);
+        Users usersOne = new Gson().fromJson(users, Users.class);
+        usersOne.setFaceImage("/"+mfile.getOriginalFilename());
+        usersMapper.updateByPrimaryKeySelective(usersOne);
+        String value = new Gson().toJson(usersOne);
+        jedis.set(key,value);
+        return null;
     }
 }
