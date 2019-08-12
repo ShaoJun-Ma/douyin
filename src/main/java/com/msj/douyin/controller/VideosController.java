@@ -6,6 +6,7 @@ import com.msj.douyin.service.VideosService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -33,4 +34,12 @@ public class VideosController {
                                       Videos videosData){
         return videosService.uploadVideo(mfile,request,videosData);
     }
+
+    @ApiOperation(value = "查询videos",notes = "查询videos的接口")
+    @GetMapping("/selectVideos")
+    public ServerResponse selectVideos(){
+        return videosService.selectVideos();
+    }
+
+
 }

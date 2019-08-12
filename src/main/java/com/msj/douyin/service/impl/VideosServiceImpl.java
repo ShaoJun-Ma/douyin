@@ -2,9 +2,12 @@ package com.msj.douyin.service.impl;
 
 import com.msj.douyin.common.ResponseConst;
 import com.msj.douyin.common.ServerResponse;
+import com.msj.douyin.mapper.UsersMapper;
 import com.msj.douyin.mapper.VideosMapper;
+import com.msj.douyin.pojo.Users;
 import com.msj.douyin.pojo.Videos;
 import com.msj.douyin.service.VideosService;
+import com.msj.douyin.vo.UsersAndVideos;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -15,6 +18,7 @@ import redis.clients.jedis.Jedis;
 import javax.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -23,11 +27,8 @@ import java.util.List;
 public class VideosServiceImpl implements VideosService{
     @Autowired
     private VideosMapper videosMapper;
-
-    //获取连接池jedis对象
     @Autowired
-    private Jedis jedis;
-
+    private UsersMapper usersMapper;
 
     //发布过的作品
     @Transactional
@@ -70,6 +71,8 @@ public class VideosServiceImpl implements VideosService{
         return ServerResponse.createSucessByCodeMsg(ResponseConst.UPLOAD_WORK_SUCCESS);
     }
 
+
+
     //获取新增videos
     private Videos addVideos(MultipartFile mfile,HttpServletRequest request,Videos videosData){
         String usersId = request.getHeader("usersId");
@@ -87,4 +90,37 @@ public class VideosServiceImpl implements VideosService{
         videos.setCreateTime(new Date());
         return videos;
     }
+
+    @Override
+    public ServerResponse selectVideos() {
+        List<Videos> videoList = videosMapper.selectAll();
+        if(videoList == null){
+            return ServerResponse.createErrorCodeMsg(ResponseConst.SELECT_VIDEOS_ERROR);
+        }
+        //整合users 和videos
+        List<UsersAndVideos> usersAndVideosList = assembleUsersAndVideos(videoList);
+
+        return  ServerResponse.createSuccess(ResponseConst.SELECT_VIDEOS_SUCCESS,usersAndVideosList);
+    }
+    private List<UsersAndVideos> assembleUsersAndVideos(List<Videos> videoList){
+        List<UsersAndVideos> usersAndVideosList = new ArrayList<>();
+        if(videoList != null){
+            for(Videos video:videoList){
+                String userId = video.getUserId();
+                Users users = new Users();
+                users.setId(userId);
+                Users userOne = usersMapper.selectOne(users);
+                if(userOne == null){
+                    return null;
+                }
+                UsersAndVideos usersAndVideos = new UsersAndVideos();
+                usersAndVideos.setVideos(video);
+                usersAndVideos.setUsers(userOne);
+                usersAndVideosList.add(usersAndVideos);
+            }
+            return usersAndVideosList;
+        }
+        return null;
+    }
+
 }

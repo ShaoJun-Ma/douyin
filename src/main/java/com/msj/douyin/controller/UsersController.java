@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 @Api(value = "用户注册登录的接口",tags = {"注册和登录的controller"})
@@ -54,7 +55,6 @@ public class UsersController {
     public ServerResponse logout(HttpServletRequest request){
         return usersService.logout(request);
     }
-
 
 
 

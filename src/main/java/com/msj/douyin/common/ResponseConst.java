@@ -24,11 +24,19 @@ public class ResponseConst {
     public final static String SELECT_WORK_ERROR = "获取作品失败";
 
     public final static String SELECT_USERS_ERROR = "无该用户信息";
+    public final static String SELECT_USERS_SUCCESS = "成功获取用户信息";
 
     public final static String UPLOAD_WORK_SUCCESS = "上传作品成功";
     public final static String UPLOAD_WORK_ERROR = "上传作品失败";
 
+    public final static String SELECT_BGM_SUCCESS = "获取Bgm成功";
+    public final static String SELECT_BGM_ERROR = "获取Bgm失败";
 
+    public final static String BGM_PATH = "127.0.0.1:8080/bgms";
+    public final static String IMAGES_PATH = "../../127.0.0.1:8080/images";
+
+    public final static String SELECT_VIDEOS_SUCCESS = "查看videos成功";
+    public final static String SELECT_VIDEOS_ERROR = "查看videos失败";
 
 
 }

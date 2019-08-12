@@ -1,7 +1,9 @@
 package com.msj.douyin.pojo;
 
-import javax.persistence.*;
+import io.swagger.annotations.ApiModel;
 
+import javax.persistence.*;
+@ApiModel(value = "Bgm对象",description = "这是Bgm对象")
 public class Bgm {
     @Id
     private String id;

@@ -9,4 +9,5 @@ import javax.servlet.http.HttpServletRequest;
 public interface VideosService {
     ServerResponse doSelectWork(HttpServletRequest request);
     ServerResponse uploadVideo(MultipartFile mfile, HttpServletRequest request, Videos videosData);
+    ServerResponse selectVideos();
 }
