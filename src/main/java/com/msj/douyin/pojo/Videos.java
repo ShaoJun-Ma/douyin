@@ -1,8 +1,12 @@
 package com.msj.douyin.pojo;
 
-import java.util.Date;
-import javax.persistence.*;
+import io.swagger.annotations.ApiModel;
 
+import javax.persistence.Column;
+import javax.persistence.Id;
+import java.util.Date;
+
+@ApiModel(value = "videos对象",description = "这是videos对象")
 public class Videos {
     @Id
     private String id;

@@ -10,12 +10,18 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebConfig implements WebMvcConfigurer{
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new LoginInterceptor()).addPathPatterns("/**").excludePathPatterns("/login")
-                .excludePathPatterns("/images/**");
+        registry.addInterceptor(new LoginInterceptor()).addPathPatterns("/**")
+                .excludePathPatterns("/register")
+                .excludePathPatterns("/login")
+                .excludePathPatterns("/images/**")
+                .excludePathPatterns("/swagger-resources/**", "/webjars/**", "/v2/**", "/swagger-ui.html/**");
     }
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/images/**").addResourceLocations("file:D:\\douyin\\");
+        registry.addResourceHandler("/images/**")
+                .addResourceLocations("file:D:\\douyin\\images\\");
+        registry.addResourceHandler("/videos/**")
+                .addResourceLocations("file:D:\\douyin\\videos\\");
     }
 }
