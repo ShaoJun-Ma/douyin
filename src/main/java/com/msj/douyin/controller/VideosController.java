@@ -35,6 +35,7 @@ public class VideosController {
         return videosService.uploadVideo(mfile,request,videosData);
     }
 
+    //获取videos
     @ApiOperation(value = "查询videos",notes = "查询videos的接口")
     @GetMapping("/selectVideos")
     public ServerResponse selectVideos(){

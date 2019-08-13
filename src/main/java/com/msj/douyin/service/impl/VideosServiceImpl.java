@@ -31,9 +31,8 @@ public class VideosServiceImpl implements VideosService{
     private UsersMapper usersMapper;
 
     //发布过的作品
-    @Transactional
     @Override
-    public ServerResponse doSelectWork(HttpServletRequest request){
+    public ServerResponse  doSelectWork(HttpServletRequest request){
         String usersId = request.getHeader("usersId");
         Videos videos = new Videos();
         videos.setUserId(usersId);
@@ -42,8 +41,9 @@ public class VideosServiceImpl implements VideosService{
             log.info(ResponseConst.SELECT_WORK_ERROR);//获取作品成功
             return ServerResponse.createErrorCodeMsg(ResponseConst.SELECT_WORK_ERROR);
         }
+        List<UsersAndVideos> usersAndVideosList = assembleUsersAndVideos(videoList);
         log.info(ResponseConst.SELECT_WORK_SUCCESS);//获取作品失败
-        return ServerResponse.createSuccess(ResponseConst.SELECT_WORK_SUCCESS,videoList);
+        return ServerResponse.createSuccess(ResponseConst.SELECT_WORK_SUCCESS,usersAndVideosList);
     }
 
     //上传作品
@@ -71,8 +71,6 @@ public class VideosServiceImpl implements VideosService{
         return ServerResponse.createSucessByCodeMsg(ResponseConst.UPLOAD_WORK_SUCCESS);
     }
 
-
-
     //获取新增videos
     private Videos addVideos(MultipartFile mfile,HttpServletRequest request,Videos videosData){
         String usersId = request.getHeader("usersId");
@@ -92,6 +90,7 @@ public class VideosServiceImpl implements VideosService{
     }
 
     @Override
+    //获取videos
     public ServerResponse selectVideos() {
         List<Videos> videoList = videosMapper.selectAll();
         if(videoList == null){
@@ -102,6 +101,7 @@ public class VideosServiceImpl implements VideosService{
 
         return  ServerResponse.createSuccess(ResponseConst.SELECT_VIDEOS_SUCCESS,usersAndVideosList);
     }
+    //整合users 和videos
     private List<UsersAndVideos> assembleUsersAndVideos(List<Videos> videoList){
         List<UsersAndVideos> usersAndVideosList = new ArrayList<>();
         if(videoList != null){
@@ -111,7 +111,7 @@ public class VideosServiceImpl implements VideosService{
                 users.setId(userId);
                 Users userOne = usersMapper.selectOne(users);
                 if(userOne == null){
-                    return null;
+                    continue;
                 }
                 UsersAndVideos usersAndVideos = new UsersAndVideos();
                 usersAndVideos.setVideos(video);

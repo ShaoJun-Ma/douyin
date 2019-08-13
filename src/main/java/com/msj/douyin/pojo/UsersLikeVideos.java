@@ -1,7 +1,10 @@
 package com.msj.douyin.pojo;
 
+import io.swagger.annotations.ApiModel;
+
 import javax.persistence.*;
 
+@ApiModel(value = "用户喜欢收藏的对象",description = "这是用户喜欢收藏的对象")
 @Table(name = "users_like_videos")
 public class UsersLikeVideos {
     @Id
