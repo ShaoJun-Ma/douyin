@@ -13,6 +13,7 @@ public interface UsersService {
     ServerResponse register(Users users);
     ServerResponse login(Users users);
     ServerResponse mine(HttpServletRequest request);
+    ServerResponse selectPublisher(String publisherUserId);
     ServerResponse changeFace(MultipartFile mfile,HttpServletRequest request);
     ServerResponse logout(HttpServletRequest request);
 

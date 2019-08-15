@@ -42,6 +42,13 @@ public class UsersController {
         return usersService.mine(request);
     }
 
+    //publisher的个人信息
+    @ApiOperation(value = "publisher的个人信息",notes = "publisher的个人信息的接口")
+    @PostMapping("/selectPublisher")
+    public ServerResponse selectPublisher(String publisherUserId){
+        return usersService.selectPublisher(publisherUserId);
+    }
+
     //上传头像
     @ApiOperation(value = "上传头像",notes = "上传头像的接口")
     @PostMapping("/changeFace")

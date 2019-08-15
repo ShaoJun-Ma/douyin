@@ -23,8 +23,8 @@ public class VideosController {
     //发布过的作品
     @ApiOperation(value = "发布过的作品",notes = "发布过的作品的接口")
     @GetMapping("/doSelectWork")
-    public ServerResponse doSelectWork(HttpServletRequest request){
-        return videosService.doSelectWork(request);
+    public ServerResponse doSelectWork(String usersId){
+        return videosService.doSelectWork(usersId);
     }
 
     //上传作品

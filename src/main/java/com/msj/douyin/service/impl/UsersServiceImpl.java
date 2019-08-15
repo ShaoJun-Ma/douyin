@@ -45,7 +45,6 @@ public class UsersServiceImpl implements UsersService{
 
     //注册
     @Override
-    @Transactional
     public ServerResponse register(Users users) {
         String id = String.valueOf(System.currentTimeMillis());
         users.setId(id);
@@ -67,7 +66,6 @@ public class UsersServiceImpl implements UsersService{
 
     //登录
     @Override
-    @Transactional
     public ServerResponse login(Users users) {
         //加密
         String password = users.getPassword();
@@ -91,10 +89,10 @@ public class UsersServiceImpl implements UsersService{
 
     //个人信息
     @Override
-    @Transactional
     public ServerResponse mine(HttpServletRequest request) {
         String usersId = request.getHeader("usersId");
         String users = jedis.get(usersId);
+        jedis.close();
         if(users == null){
             log.info(ResponseConst.NEED_LOGIN);//用户未登录
             return ServerResponse.createErrorCodeMsg(ResponseConst.NEED_LOGIN);
@@ -105,8 +103,18 @@ public class UsersServiceImpl implements UsersService{
         return ServerResponse.createSuccess(ResponseConst.MINE_SUCCESS_MSG,usersData);
     }
 
+    //publisher的个人信息
+    @Override
+    public ServerResponse selectPublisher(String id) {
+        Users users = usersMapper.selectByPrimaryKey(id);
+        if(users == null){
+            return ServerResponse.createErrorCodeMsg(ResponseConst.SELECT_USERS_ERROR);
+        }
+        return ServerResponse.createSuccess(ResponseConst.SELECT_USERS_SUCCESS,users);
+    }
+
+
     //上传头像
-    @Transactional
     @Override
     public ServerResponse changeFace(MultipartFile mfile,HttpServletRequest request){
         //新建文件夹及文件
@@ -136,7 +144,6 @@ public class UsersServiceImpl implements UsersService{
     }
 
     //退出登录
-    @Transactional
     @Override
     public ServerResponse logout(HttpServletRequest request){
         String usersId = request.getHeader("usersId");

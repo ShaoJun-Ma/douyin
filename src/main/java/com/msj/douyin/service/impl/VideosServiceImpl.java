@@ -36,8 +36,7 @@ public class VideosServiceImpl implements VideosService{
 
     //发布过的作品
     @Override
-    public ServerResponse  doSelectWork(HttpServletRequest request){
-        String usersId = request.getHeader("usersId");
+    public ServerResponse  doSelectWork(String usersId){
         Videos videos = new Videos();
         videos.setUserId(usersId);
         List<Videos> videoList = videosMapper.select(videos);
@@ -148,7 +147,6 @@ public class VideosServiceImpl implements VideosService{
         UsersLikeVideos ulVideos = new UsersLikeVideos();
         ulVideos.setUserId(usersId);
         ulVideos.setVideoId(videoId);
-
         UsersLikeVideos usersLikeVideos = usersLikeVideosMapper.selectOne(ulVideos);
         return usersLikeVideos;
     }
