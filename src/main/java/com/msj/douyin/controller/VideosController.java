@@ -22,7 +22,7 @@ public class VideosController {
 
     //发布过的作品
     @ApiOperation(value = "发布过的作品",notes = "发布过的作品的接口")
-    @PostMapping("/doSelectWork")
+    @GetMapping("/doSelectWork")
     public ServerResponse doSelectWork(HttpServletRequest request){
         return videosService.doSelectWork(request);
     }
@@ -42,5 +42,26 @@ public class VideosController {
         return videosService.selectVideos();
     }
 
+    //判断是否收藏过
+    @ApiOperation(value = "判断是否收藏",notes = "判断是否收藏的接口")
+    @GetMapping("/isCollect")
+    public ServerResponse isCollect(String videoId,HttpServletRequest request){
+        return videosService.isCollect(videoId,request);
+    }
 
+    //收藏videos
+    @ApiOperation(value = "收藏videos",notes = "收藏videos的接口")
+    @GetMapping("/likeVideo")
+    public ServerResponse likeVideo(String videoId,String publishUserId,
+                                    HttpServletRequest request){
+        return videosService.likeVideo(videoId,publishUserId,request);
+    }
+
+    //取消收藏video
+    @ApiOperation(value = "取消收藏videos",notes = "取消收藏videos的接口")
+    @GetMapping("/noLikeVideo")
+    public ServerResponse noLikeVideo(String videoId,String publishUserId,
+                                     HttpServletRequest request) {
+        return videosService.noLikeVideo(videoId, publishUserId,request);
+    }
 }

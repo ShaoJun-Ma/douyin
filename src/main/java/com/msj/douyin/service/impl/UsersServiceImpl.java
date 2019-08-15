@@ -45,6 +45,7 @@ public class UsersServiceImpl implements UsersService{
 
     //注册
     @Override
+    @Transactional
     public ServerResponse register(Users users) {
         String id = String.valueOf(System.currentTimeMillis());
         users.setId(id);
@@ -66,6 +67,7 @@ public class UsersServiceImpl implements UsersService{
 
     //登录
     @Override
+    @Transactional
     public ServerResponse login(Users users) {
         //加密
         String password = users.getPassword();
@@ -89,6 +91,7 @@ public class UsersServiceImpl implements UsersService{
 
     //个人信息
     @Override
+    @Transactional
     public ServerResponse mine(HttpServletRequest request) {
         String usersId = request.getHeader("usersId");
         String users = jedis.get(usersId);
@@ -133,6 +136,7 @@ public class UsersServiceImpl implements UsersService{
     }
 
     //退出登录
+    @Transactional
     @Override
     public ServerResponse logout(HttpServletRequest request){
         String usersId = request.getHeader("usersId");

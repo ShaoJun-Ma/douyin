@@ -2,9 +2,11 @@ package com.msj.douyin.service.impl;
 
 import com.msj.douyin.common.ResponseConst;
 import com.msj.douyin.common.ServerResponse;
+import com.msj.douyin.mapper.UsersLikeVideosMapper;
 import com.msj.douyin.mapper.UsersMapper;
 import com.msj.douyin.mapper.VideosMapper;
 import com.msj.douyin.pojo.Users;
+import com.msj.douyin.pojo.UsersLikeVideos;
 import com.msj.douyin.pojo.Videos;
 import com.msj.douyin.service.VideosService;
 import com.msj.douyin.vo.UsersAndVideos;
@@ -29,6 +31,8 @@ public class VideosServiceImpl implements VideosService{
     private VideosMapper videosMapper;
     @Autowired
     private UsersMapper usersMapper;
+    @Autowired
+    private UsersLikeVideosMapper usersLikeVideosMapper;
 
     //发布过的作品
     @Override
@@ -101,6 +105,7 @@ public class VideosServiceImpl implements VideosService{
 
         return  ServerResponse.createSuccess(ResponseConst.SELECT_VIDEOS_SUCCESS,usersAndVideosList);
     }
+
     //整合users 和videos
     private List<UsersAndVideos> assembleUsersAndVideos(List<Videos> videoList){
         List<UsersAndVideos> usersAndVideosList = new ArrayList<>();
@@ -122,5 +127,130 @@ public class VideosServiceImpl implements VideosService{
         }
         return null;
     }
+
+    //判断是否收藏过
+    @Override
+    public ServerResponse isCollect(String videoId,HttpServletRequest request) {
+        //查询usersLikeVideos
+        UsersLikeVideos usersLikeVideos = selectUsersLikeVideos(videoId, request);
+        if(usersLikeVideos == null){
+            log.info(ResponseConst.NOT_COLLECT); //还没收藏
+            return ServerResponse.createErrorCodeMsg(ResponseConst.NOT_COLLECT);
+        }
+
+        log.info(ResponseConst.IS_COLLECT); //已经收藏
+        return ServerResponse.createSuccess(ResponseConst.IS_COLLECT,usersLikeVideos);
+    }
+
+    //查询usersLikeVideos
+    private UsersLikeVideos selectUsersLikeVideos(String videoId,HttpServletRequest request){
+        String usersId = request.getHeader("usersId");
+        UsersLikeVideos ulVideos = new UsersLikeVideos();
+        ulVideos.setUserId(usersId);
+        ulVideos.setVideoId(videoId);
+
+        UsersLikeVideos usersLikeVideos = usersLikeVideosMapper.selectOne(ulVideos);
+        return usersLikeVideos;
+    }
+
+    //收藏video
+    @Override
+    public ServerResponse likeVideo(String videoId,String publishUserId,
+                                    HttpServletRequest request) {
+        String usersId = request.getHeader("usersId");
+        //增加usersLikeVideos
+        int resultCount = addUsersLikeVideos(videoId,usersId);
+        if(resultCount <= 0){
+            log.info(ResponseConst.LIKE_VIDEO_ERROR);//收藏失败
+            return ServerResponse.createErrorCodeMsg(ResponseConst.LIKE_VIDEO_ERROR);
+        }
+        //更新users表中的收藏数
+        boolean flag = true;
+        int updateCount = updataUsers(flag,publishUserId);
+        if(updateCount<=0){
+            log.info(ResponseConst.ADD_ReceiveLikeCounts_ERROR);//增加收藏数失败
+        }
+        log.info(ResponseConst.ADD_ReceiveLikeCounts_SUCCESS);//增加收藏数成功
+        log.info(ResponseConst.LIKE_VIDEO_SUCCESS);//收藏成功
+        return ServerResponse.createSucessByCodeMsg(ResponseConst.LIKE_VIDEO_SUCCESS);
+
+    }
+
+    //取消收藏video
+    public ServerResponse noLikeVideo(String videoId,String publishUserId,
+                                      HttpServletRequest request){
+        String usersId = request.getHeader("usersId");
+        //删除usersLikeVideos
+        int resultCount = deleteUsersLikeVideos(videoId, usersId);
+        if(resultCount <= 0){
+            log.info(ResponseConst.NO_LIKE_VIDEO_ERROR);//取消收藏失败
+            return ServerResponse.createErrorCodeMsg(ResponseConst.NO_LIKE_VIDEO_ERROR);
+        }
+        //更新users表中的收藏数
+        boolean flag = false;
+        int updateCount = updataUsers(flag,publishUserId);
+        if(updateCount<=0){
+            log.info(ResponseConst.DEL_ReceiveLikeCounts_ERROR);//减少收藏数失败
+        }
+        log.info(ResponseConst.DEL_ReceiveLikeCounts_SUCCESS);//减少收藏数成功
+        log.info(ResponseConst.NO_LIKE_VIDEO_SUCCESS);//取消收藏
+        return ServerResponse.createSucessByCodeMsg(ResponseConst.NO_LIKE_VIDEO_SUCCESS);
+    }
+
+    //增加UsersLikeVideos
+    private int addUsersLikeVideos(String videoId,String usersId){
+        UsersLikeVideos ulVideos = new UsersLikeVideos();
+        ulVideos.setId(String.valueOf(System.currentTimeMillis()));
+        ulVideos.setVideoId(videoId);
+        ulVideos.setUserId(usersId);
+        //新增数据到usersLikeVideos表
+        int resultCount = usersLikeVideosMapper.insert(ulVideos);
+        return resultCount;
+    }
+
+    //删除UsersLikeVideos
+    private int deleteUsersLikeVideos(String videoId,String usersId){
+        String id = selectUsersLikeVideos(videoId, usersId);
+        int resultCount = usersLikeVideosMapper.deleteByPrimaryKey(id);
+        return resultCount;
+    }
+
+    //查询usersLikeVideos
+    private String selectUsersLikeVideos(String videoId,String usersId){
+        UsersLikeVideos ulVideos = new UsersLikeVideos();
+        ulVideos.setVideoId(videoId);
+        ulVideos.setUserId(usersId);
+        UsersLikeVideos usersLikeVideos = usersLikeVideosMapper.selectOne(ulVideos);
+        return usersLikeVideos.getId();
+    }
+
+    //更新users表中的收藏数
+    private int updataUsers(boolean flag,String publishUserId){
+        //根据id查询Users
+        Users users = selectUsers(publishUserId);
+        int receiveLikeCounts = users.getReceiveLikeCounts();
+        if(!flag){
+            //false：减少收藏数
+            if(receiveLikeCounts <= 0){//保证收藏数不能小于0
+                receiveLikeCounts = 0;
+            }
+            receiveLikeCounts--;
+        }else{
+            //true：增加收藏数
+            receiveLikeCounts++;
+        }
+        Users usersOne = new Users();
+        usersOne.setId(publishUserId);
+        usersOne.setReceiveLikeCounts(receiveLikeCounts);
+        int updateCount = usersMapper.updateByPrimaryKeySelective(usersOne);
+        return updateCount;
+    }
+
+    //根据id查询Users
+    private Users selectUsers(String publishUserId){
+        Users users = usersMapper.selectByPrimaryKey(publishUserId);
+        return users;
+    }
+
 
 }

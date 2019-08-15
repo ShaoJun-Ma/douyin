@@ -38,5 +38,20 @@ public class ResponseConst {
     public final static String SELECT_VIDEOS_SUCCESS = "查看videos成功";
     public final static String SELECT_VIDEOS_ERROR = "查看videos失败";
 
+    public final static String LIKE_VIDEO_SUCCESS = "收藏成功";
+    public final static String LIKE_VIDEO_ERROR = "收藏失败";
+
+    public final static String NO_LIKE_VIDEO_SUCCESS = "取消收藏";
+    public final static String NO_LIKE_VIDEO_ERROR = "取消收藏失败";
+
+    public final static String IS_COLLECT = "已经收藏";
+    public final static String NOT_COLLECT = "还没收藏";
+
+    public final static String ADD_ReceiveLikeCounts_SUCCESS = "users表增加收藏数成功";
+    public final static String ADD_ReceiveLikeCounts_ERROR = "users表增加收藏数失败";
+
+    public final static String DEL_ReceiveLikeCounts_SUCCESS = "users表减少收藏数成功";
+    public final static String DEL_ReceiveLikeCounts_ERROR = "users表减少收藏数失败";
+
 
 }
