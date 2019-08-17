@@ -12,9 +12,11 @@ import java.util.List;
 public interface UsersService {
     ServerResponse register(Users users);
     ServerResponse login(Users users);
-    ServerResponse mine(HttpServletRequest request);
-    ServerResponse selectPublisher(String publisherUserId);
+    ServerResponse mine(String usersId);
     ServerResponse changeFace(MultipartFile mfile,HttpServletRequest request);
+    ServerResponse isFollowMe(String usersId,HttpServletRequest request);
     ServerResponse logout(HttpServletRequest request);
+    ServerResponse followMe(String usersId,HttpServletRequest request);
+    ServerResponse noFollowMe(String usersId,HttpServletRequest request);
 
 }

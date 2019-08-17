@@ -53,5 +53,21 @@ public class ResponseConst {
     public final static String DEL_ReceiveLikeCounts_SUCCESS = "users表减少收藏数成功";
     public final static String DEL_ReceiveLikeCounts_ERROR = "users表减少收藏数失败";
 
+    public final static String FOLLOW_ME_SUCCESS = "关注成功";
+    public final static String FOLLOW_ME_ERROR = "关注失败";
 
+    public final static String CANCEL_FOLLOW_ME_SUCCESS = "取消关注成功";
+    public final static String CANCEL_FOLLOW_ME_ERROR = "取消关注失败";
+
+    public final static String ADD_USERS_FANS_SUCCESS = "增加粉丝成功";
+    public final static String ADD_USERS_FANS_ERROR = "增加粉丝失败";
+
+    public final static String ADD_USERS_FOLLOW_SUCCESS = "增加关注成功";
+    public final static String ADD_USERS_FOLLOW_ERROR = "增加关注失败";
+
+    public final static String DEL_USERS_FANS_SUCCESS = "删除粉丝成功";
+    public final static String DEL_USERS_FANS_ERROR = "删除粉丝失败";
+
+    public final static String SELECT_USERS_FANS_ERROR = "该数据不存在";
+    public final static String SELECT_USERS_FANS_SUCCESS = "已经关注过";
 }

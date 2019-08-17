@@ -38,15 +38,8 @@ public class UsersController {
     //个人信息
     @ApiOperation(value = "个人信息",notes = "个人信息的接口")
     @GetMapping("/mine")
-    public ServerResponse mine(HttpServletRequest request){
-        return usersService.mine(request);
-    }
-
-    //publisher的个人信息
-    @ApiOperation(value = "publisher的个人信息",notes = "publisher的个人信息的接口")
-    @PostMapping("/selectPublisher")
-    public ServerResponse selectPublisher(String publisherUserId){
-        return usersService.selectPublisher(publisherUserId);
+    public ServerResponse mine(String usersId){
+        return usersService.mine(usersId);
     }
 
     //上传头像
@@ -63,6 +56,26 @@ public class UsersController {
         return usersService.logout(request);
     }
 
+    //查看是否关注过
+    @ApiOperation(value = "查看是否关注过",notes = "查看是否关注过的接口")
+    @PostMapping("/isFollowMe")
+    public ServerResponse isFollowMe(String usersId,HttpServletRequest request){
+        return usersService.isFollowMe(usersId,request);
+    }
+
+    //关注我
+    @ApiOperation(value = "关注我",notes = "关注我的接口")
+    @PostMapping("/followMe")
+    public ServerResponse followMe(String usersId,HttpServletRequest request){
+        return usersService.followMe(usersId,request);
+    }
+
+    //取消关注
+    @ApiOperation(value = "取消关注",notes = "取消关注的接口")
+    @PostMapping("/noFollowMe")
+    public ServerResponse noFollowMe(String usersId,HttpServletRequest request){
+        return usersService.noFollowMe(usersId,request);
+    }
 
 
 }

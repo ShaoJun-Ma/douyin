@@ -101,7 +101,6 @@ public class VideosServiceImpl implements VideosService{
         }
         //整合users 和videos
         List<UsersAndVideos> usersAndVideosList = assembleUsersAndVideos(videoList);
-
         return  ServerResponse.createSuccess(ResponseConst.SELECT_VIDEOS_SUCCESS,usersAndVideosList);
     }
 

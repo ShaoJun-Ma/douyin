@@ -3,9 +3,11 @@ package com.msj.douyin.service.impl;
 import com.google.gson.Gson;
 import com.msj.douyin.common.ResponseConst;
 import com.msj.douyin.common.ServerResponse;
+import com.msj.douyin.mapper.UsersFansMapper;
 import com.msj.douyin.mapper.UsersMapper;
 import com.msj.douyin.mapper.VideosMapper;
 import com.msj.douyin.pojo.Users;
+import com.msj.douyin.pojo.UsersFans;
 import com.msj.douyin.pojo.Videos;
 import com.msj.douyin.service.UsersService;
 import com.msj.douyin.utils.MD5Util;
@@ -38,6 +40,8 @@ public class UsersServiceImpl implements UsersService{
 
     @Autowired
     private UsersMapper usersMapper;
+    @Autowired
+    private UsersFansMapper usersFansMapper;
 
     //获取连接池jedis对象
     @Autowired
@@ -89,30 +93,23 @@ public class UsersServiceImpl implements UsersService{
 
     //个人信息
     @Override
-    public ServerResponse mine(HttpServletRequest request) {
-        String usersId = request.getHeader("usersId");
+    public ServerResponse mine(String usersId) {
         String users = jedis.get(usersId);
         jedis.close();
         if(users == null){
-            log.info(ResponseConst.NEED_LOGIN);//用户未登录
-            return ServerResponse.createErrorCodeMsg(ResponseConst.NEED_LOGIN);
+            Users usersOne = usersMapper.selectByPrimaryKey(usersId);
+            if(usersOne == null){
+                log.info(ResponseConst.SELECT_USERS_ERROR);//无该用户信息
+                return ServerResponse.createErrorCodeMsg(ResponseConst.SELECT_USERS_ERROR);
+            }else{
+                return ServerResponse.createSuccess(ResponseConst.SELECT_USERS_SUCCESS,usersOne);
+            }
         }
         Users usersData = new Gson().fromJson(users, Users.class);
         log.info(usersData.toString());//个人信息
-        log.info(ResponseConst.MINE_SUCCESS_MSG);//获取个人信息成功
-        return ServerResponse.createSuccess(ResponseConst.MINE_SUCCESS_MSG,usersData);
+        log.info(ResponseConst.SELECT_USERS_SUCCESS);//获取个人信息成功
+        return ServerResponse.createSuccess(ResponseConst.SELECT_USERS_SUCCESS,usersData);
     }
-
-    //publisher的个人信息
-    @Override
-    public ServerResponse selectPublisher(String id) {
-        Users users = usersMapper.selectByPrimaryKey(id);
-        if(users == null){
-            return ServerResponse.createErrorCodeMsg(ResponseConst.SELECT_USERS_ERROR);
-        }
-        return ServerResponse.createSuccess(ResponseConst.SELECT_USERS_SUCCESS,users);
-    }
-
 
     //上传头像
     @Override
@@ -154,10 +151,150 @@ public class UsersServiceImpl implements UsersService{
         return ServerResponse.createErrorCodeMsg(ResponseConst.LOGOUT_SUCCESS);
     }
 
+    //查看是否关注过
+    @Override
+    public ServerResponse isFollowMe(String usersId, HttpServletRequest request) {
+        String fanId = request.getHeader("usersId");
+        UsersFans usersFans = selectUsersFans(usersId, fanId);
+        if(usersFans == null){
+            return ServerResponse.createErrorCodeMsg(ResponseConst.SELECT_USERS_FANS_ERROR);
+        }
+        return ServerResponse.createSucessByCodeMsg(ResponseConst.SELECT_USERS_FANS_SUCCESS);
+    }
 
+    //关注
+    @Override
+    public ServerResponse followMe(String usersId,HttpServletRequest request) {
+        boolean flag = true;
+        String fanId = request.getHeader("usersId");
+        //关注他人：增加users表关注者
+        int addCount = addUserFollow(fanId,flag);
+        if(addCount <= 0){
+            log.info(ResponseConst.ADD_USERS_FOLLOW_ERROR);//增加关注失败
+            return ServerResponse.createErrorCodeMsg(ResponseConst.ADD_USERS_FOLLOW_ERROR);
+        }else{
+            log.info(ResponseConst.ADD_USERS_FOLLOW_SUCCESS);//增加关注成功
+        }
 
+        //增加粉丝
+        int resultCount = addUsesFans(usersId, fanId);
+        if(resultCount <= 0){
+            log.info(ResponseConst.ADD_USERS_FANS_ERROR);//增加粉丝失败
+            return ServerResponse.createErrorCodeMsg(ResponseConst.ADD_USERS_FANS_ERROR);
+        }else{
+            log.info(ResponseConst.ADD_USERS_FANS_SUCCESS);//增加粉丝成功
+        }
 
+        //被关注者：增加users表粉丝数
+        int updateCount = updateFansCount(usersId, flag);
+        if(updateCount <= 0){
+            log.info(ResponseConst.FOLLOW_ME_ERROR);//关注失败
+            return ServerResponse.createErrorCodeMsg(ResponseConst.FOLLOW_ME_ERROR);
+        }
+        log.info(ResponseConst.FOLLOW_ME_SUCCESS);//关注成功
+        return ServerResponse.createSucessByCodeMsg(ResponseConst.FOLLOW_ME_SUCCESS);
+    }
 
+    //取消关注
+    @Override
+    public ServerResponse noFollowMe(String usersId, HttpServletRequest request) {
+        String fanId = request.getHeader("usersId");
+        boolean flag = false;
+
+        //关注他人：减少users表关注者
+        int addCount = addUserFollow(fanId,flag);
+        if(addCount <= 0){
+            log.info(ResponseConst.ADD_USERS_FOLLOW_ERROR);//增加关注失败
+            return ServerResponse.createErrorCodeMsg(ResponseConst.ADD_USERS_FOLLOW_ERROR);
+        }
+        log.info(ResponseConst.ADD_USERS_FOLLOW_SUCCESS);//增加关注成功
+
+        //删除粉丝
+        int resultCount = deleteUsersFans(usersId,fanId);
+        if(resultCount <= 0){
+            log.info(ResponseConst.DEL_USERS_FANS_ERROR); //删除粉丝失败
+            return ServerResponse.createErrorCodeMsg(ResponseConst.DEL_USERS_FANS_ERROR);
+        }
+        log.info(ResponseConst.DEL_USERS_FANS_SUCCESS);//删除粉丝成功
+
+        //被关注者：减少users表粉丝数
+        int updateCount = updateFansCount(usersId, flag);
+        if(updateCount <= 0){
+            log.info(ResponseConst.CANCEL_FOLLOW_ME_ERROR);//取消关注失败
+            return ServerResponse.createErrorCodeMsg(ResponseConst.CANCEL_FOLLOW_ME_ERROR);
+        }
+        log.info(ResponseConst.CANCEL_FOLLOW_ME_SUCCESS);//取消关注成功
+        return ServerResponse.createSucessByCodeMsg(ResponseConst.CANCEL_FOLLOW_ME_SUCCESS);
+    }
+
+    //更新关注者（增加/减少）
+    private int addUserFollow(String usersId,boolean flag){
+        Users users = usersMapper.selectByPrimaryKey(usersId);
+        if(users == null){
+            log.info(ResponseConst.SELECT_USERS_ERROR);
+        }
+        if(!flag){
+            if(users.getFansCounts()<=0){
+                users.setFollowCounts(0);
+            }else{
+                users.setFollowCounts(users.getFansCounts()-1);
+            }
+        }else{
+            users.setFollowCounts(users.getFollowCounts()+1);
+        }
+        int resultCount = usersMapper.updateByPrimaryKeySelective(users);
+        return resultCount;
+    }
+
+    //删除粉丝
+    private int deleteUsersFans(String usersId,String fanId){
+        UsersFans usersFans = selectUsersFans(usersId, fanId);
+        if(usersFans == null){
+            log.info(ResponseConst.SELECT_USERS_FANS_ERROR);//该数据不存在
+        }
+        int resultCount = usersFansMapper.deleteByPrimaryKey(usersFans.getId());
+        return resultCount;
+    }
+
+    //增加粉丝
+    private int addUsesFans(String usersId,String fanId){
+        UsersFans usersFans = new UsersFans();
+        usersFans.setId(String.valueOf(System.currentTimeMillis()));
+        usersFans.setUserId(usersId);
+        usersFans.setFanId(fanId);
+        int resultCount = usersFansMapper.insert(usersFans);
+        return resultCount;
+    }
+
+    //查询粉丝
+    private UsersFans selectUsersFans(String usersId,String fanId){
+        if(usersId == null || fanId == null){
+            return null;
+        }
+        UsersFans usersFans = new UsersFans();
+        usersFans.setUserId(usersId);
+        usersFans.setFanId(fanId);
+        UsersFans usersFansOne = usersFansMapper.selectOne(usersFans);
+        return usersFansOne;
+    }
+
+    //更新users表中的粉丝数（增加/减少）
+    private int updateFansCount(String usersId,boolean flag){
+        //通过id查users
+        Users usersOne = usersMapper.selectByPrimaryKey(usersId);
+        if(!flag){//粉丝数减1
+            if(usersOne.getFansCounts() <= 0){
+                usersOne.setFansCounts(0);
+            }else{
+                usersOne.setFansCounts(usersOne.getFansCounts()-1);
+            }
+        }else{
+            //粉丝数加1
+            usersOne.setFansCounts(usersOne.getFansCounts()+1);
+        }
+        int updateCount = usersMapper.updateByPrimaryKeySelective(usersOne);
+        return updateCount;
+    }
 
 
 }

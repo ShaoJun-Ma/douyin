@@ -3,10 +3,15 @@ package com.msj.douyin.interceptor;
 import com.google.gson.Gson;
 import com.msj.douyin.common.ResponseConst;
 import com.msj.douyin.common.ServerResponse;
+import com.msj.douyin.mapper.UsersMapper;
+import com.msj.douyin.pojo.Users;
 import com.msj.douyin.utils.JedisPoolUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import redis.clients.jedis.Jedis;
 
@@ -15,7 +20,10 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.PrintWriter;
 
 @Slf4j
+@Component
 public class LoginInterceptor implements HandlerInterceptor{
+    @Autowired
+    private UsersMapper usersMapper;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -38,13 +46,16 @@ public class LoginInterceptor implements HandlerInterceptor{
             Jedis jedis = JedisPoolUtil.getJedis();
             String users = jedis.get(usersId);  //通过usersId获取用户个人信息
             jedis.close();
-            if(users == null){
-                log.info(ResponseConst.SELECT_USERS_ERROR);//无该用户信息
-                //write()里面的参数是String，需要将对象转为json格式（String类型）
-                String needLogin = gson.toJson(ServerResponse.createErrorCodeMsg(ResponseConst.NEED_LOGIN));//用户未登录
-                response.getWriter().write(needLogin);
-                log.info("运行时间: {}",System.currentTimeMillis()-start);
-                return false;
+            if(users == null){//users是从redis里面取出来的
+                Users usersOne = usersMapper.selectByPrimaryKey(usersId);//usersOne是从数据库里面取出来的
+                if(usersOne == null){
+                    log.info(ResponseConst.SELECT_USERS_ERROR);//无该用户信息
+                    //write()里面的参数是String，需要将对象转为json格式（String类型）
+                    String needLogin = gson.toJson(ServerResponse.createErrorCodeMsg(ResponseConst.NEED_LOGIN));//用户未登录
+                    response.getWriter().write(needLogin);
+                    log.info("运行时间: {}",System.currentTimeMillis()-start);
+                    return false;
+                }
             }
         }
 

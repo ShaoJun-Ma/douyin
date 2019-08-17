@@ -9,4 +9,6 @@
     <result column="user_id" jdbcType="VARCHAR" property="userId" />
     <result column="fan_id" jdbcType="VARCHAR" property="fanId" />
   </resultMap>
+
+
 </mapper>
