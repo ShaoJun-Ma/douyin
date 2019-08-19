@@ -13,4 +13,6 @@ public interface VideosService {
     ServerResponse isCollect(String videoId,HttpServletRequest request);
     ServerResponse likeVideo(String videoId,String publishUserId,HttpServletRequest request);
     ServerResponse noLikeVideo(String videoId,String publishUserId,HttpServletRequest request);
+    ServerResponse doSelectLike(String usersId);
+    ServerResponse doSelectFollow(String usersId);
 }

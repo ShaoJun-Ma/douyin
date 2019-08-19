@@ -2,10 +2,12 @@ package com.msj.douyin.service.impl;
 
 import com.msj.douyin.common.ResponseConst;
 import com.msj.douyin.common.ServerResponse;
+import com.msj.douyin.mapper.UsersFansMapper;
 import com.msj.douyin.mapper.UsersLikeVideosMapper;
 import com.msj.douyin.mapper.UsersMapper;
 import com.msj.douyin.mapper.VideosMapper;
 import com.msj.douyin.pojo.Users;
+import com.msj.douyin.pojo.UsersFans;
 import com.msj.douyin.pojo.UsersLikeVideos;
 import com.msj.douyin.pojo.Videos;
 import com.msj.douyin.service.VideosService;
@@ -33,6 +35,8 @@ public class VideosServiceImpl implements VideosService{
     private UsersMapper usersMapper;
     @Autowired
     private UsersLikeVideosMapper usersLikeVideosMapper;
+    @Autowired
+    private UsersFansMapper usersFansMapper;
 
     //发布过的作品
     @Override
@@ -249,5 +253,57 @@ public class VideosServiceImpl implements VideosService{
         return users;
     }
 
+    //收藏过的videosList
+    @Override
+    public ServerResponse doSelectLike(String usersId) {
+        List<UsersAndVideos> usersAndVideosList = new ArrayList<>();
+        UsersLikeVideos usersLikeVideos = new UsersLikeVideos();
+        usersLikeVideos.setUserId(usersId);
+        List<UsersLikeVideos> usersLikeVideosList = usersLikeVideosMapper.select(usersLikeVideos);
+        if(usersLikeVideosList != null){
+            for(UsersLikeVideos u:usersLikeVideosList){
+                UsersAndVideos usersAndVideos = new UsersAndVideos();
+                String vId = u.getVideoId();
+                Videos videos = videosMapper.selectByPrimaryKey(vId);
+                String uId = videos.getUserId();
+                Users users = usersMapper.selectByPrimaryKey(uId);
+                usersAndVideos.setVideos(videos);
+                usersAndVideos.setUsers(users);
+                usersAndVideosList.add(usersAndVideos);
+            }
+        }
+        if(usersAndVideosList == null){
+            return ServerResponse.createErrorCodeMsg(ResponseConst.SELECT_ERROR);
+        }
+        return ServerResponse.createSuccess(ResponseConst.SELECT_SUCCESS,usersAndVideosList);
+    }
+
+    //获取关注列表
+    @Override
+    public ServerResponse doSelectFollow(String usersId) {//fansId
+        List<UsersAndVideos> usersAndVideosList = new ArrayList<>();
+        UsersFans usersFans = new UsersFans();
+        usersFans.setFanId(usersId);
+        List<UsersFans> usersFansList = usersFansMapper.select(usersFans);
+        if(usersFansList!=null){
+            for(UsersFans u:usersFansList){
+                String uId = u.getUserId(); //被关注的usersId
+                Users users = usersMapper.selectByPrimaryKey(uId);
+                Videos videosOne = new Videos();
+                videosOne.setUserId(uId);
+                List<Videos> videosList = videosMapper.select(videosOne);
+                for(Videos v:videosList) {
+                    UsersAndVideos usersAndVideos = new UsersAndVideos();
+                    usersAndVideos.setUsers(users);
+                    usersAndVideos.setVideos(v);
+                    usersAndVideosList.add(usersAndVideos);
+                }
+            }
+        }
+        if(usersAndVideosList == null){
+            return ServerResponse.createErrorCodeMsg(ResponseConst.SELECT_ERROR);
+        }
+        return ServerResponse.createSuccess(ResponseConst.SELECT_SUCCESS,usersAndVideosList);
+    }
 
 }

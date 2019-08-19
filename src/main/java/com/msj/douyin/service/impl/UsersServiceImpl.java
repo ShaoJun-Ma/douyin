@@ -11,6 +11,7 @@ import com.msj.douyin.pojo.UsersFans;
 import com.msj.douyin.pojo.Videos;
 import com.msj.douyin.service.UsersService;
 import com.msj.douyin.utils.MD5Util;
+import com.msj.douyin.vo.UsersAndVideos;
 import it.sauronsoftware.jave.EncoderException;
 import it.sauronsoftware.jave.MultimediaInfo;
 import lombok.extern.slf4j.Slf4j;
@@ -50,14 +51,13 @@ public class UsersServiceImpl implements UsersService{
     //注册
     @Override
     public ServerResponse register(Users users) {
-        String id = String.valueOf(System.currentTimeMillis());
-        users.setId(id);
-        users.setNickname(users.getUsername());
-        //加密
-        String password = users.getPassword();
-        users.setPassword(MD5Util.getMD5(password+"salt"));
-
-        int resultCount = usersMapper.insert(users);
+        //1、判断该用户是否已经注册
+        Users usersOne = usersMapper.selectOne(users);
+        if(usersOne != null){//已经存在
+            return ServerResponse.createErrorByCodeAndMsg(ResponseConst.IS_CODE,ResponseConst.IS_REGISTER);
+        }
+        //2、进行注册：添加用户数据
+        int resultCount = addRegister(users);
         if(resultCount < 0){
             log.info(ResponseConst.REGISTER_ERROR_MSG);//日志：注册失败
             return ServerResponse.createErrorCodeMsg(ResponseConst.REGISTER_ERROR_MSG);
@@ -66,6 +66,20 @@ public class UsersServiceImpl implements UsersService{
         //回滚（用来测试）：数据不会更新到数据库中
 //        TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
         return ServerResponse.createSucessByCodeMsg(ResponseConst.REGISTER_SUCCESS_MSG);
+    }
+
+    private int addRegister(Users users){
+        String id = String.valueOf(System.currentTimeMillis());
+        users.setId(id);
+        users.setNickname(users.getUsername());
+        //加密
+        String password = users.getPassword();
+        users.setPassword(MD5Util.getMD5(password+"salt"));
+        users.setFansCounts(0);
+        users.setFollowCounts(0);
+        users.setReceiveLikeCounts(0);
+        int resultCount = usersMapper.insert(users);
+        return resultCount;
     }
 
     //登录
@@ -96,6 +110,7 @@ public class UsersServiceImpl implements UsersService{
     public ServerResponse mine(String usersId) {
         String users = jedis.get(usersId);
         jedis.close();
+        //从redis取出来的数据为空，就从DB里面查数据
         if(users == null){
             Users usersOne = usersMapper.selectByPrimaryKey(usersId);
             if(usersOne == null){
@@ -133,7 +148,7 @@ public class UsersServiceImpl implements UsersService{
         synchronized (usersOne){
             //进行两个操作，加锁机制
             usersMapper.updateByPrimaryKeySelective(usersOne);
-            String usersData = new Gson().toJson( usersMapper.selectOne(usersOne));
+            String usersData = new Gson().toJson(usersMapper.selectOne(usersOne));
             jedis.set(usersId,usersData);
         }
         log.info(ResponseConst.UPDATE_IMAGE_SUCCESS);//更新头像成功
@@ -192,6 +207,10 @@ public class UsersServiceImpl implements UsersService{
             return ServerResponse.createErrorCodeMsg(ResponseConst.FOLLOW_ME_ERROR);
         }
         log.info(ResponseConst.FOLLOW_ME_SUCCESS);//关注成功
+
+        //全部更新完删除key
+        jedis.del(usersId);
+        jedis.del(fanId);
         return ServerResponse.createSucessByCodeMsg(ResponseConst.FOLLOW_ME_SUCCESS);
     }
 
@@ -224,8 +243,14 @@ public class UsersServiceImpl implements UsersService{
             return ServerResponse.createErrorCodeMsg(ResponseConst.CANCEL_FOLLOW_ME_ERROR);
         }
         log.info(ResponseConst.CANCEL_FOLLOW_ME_SUCCESS);//取消关注成功
+
+        //全部更新完删除key
+        jedis.del(usersId);
+        jedis.del(fanId);
         return ServerResponse.createSucessByCodeMsg(ResponseConst.CANCEL_FOLLOW_ME_SUCCESS);
     }
+
+
 
     //更新关注者（增加/减少）
     private int addUserFollow(String usersId,boolean flag){

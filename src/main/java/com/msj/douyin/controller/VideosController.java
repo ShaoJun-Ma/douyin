@@ -64,4 +64,18 @@ public class VideosController {
                                      HttpServletRequest request) {
         return videosService.noLikeVideo(videoId, publishUserId,request);
     }
+
+    //已经收藏的videos
+    @ApiOperation(value = "收藏过的videosList",notes = "收藏过的videosList的接口")
+    @GetMapping("/doSelectLike")
+    public ServerResponse doSelectLike(String usersId){
+        return videosService.doSelectLike(usersId);
+    }
+
+    //获取关注列表
+    @ApiOperation(value="获取关注列表",notes = "获取关注列表的接口")
+    @GetMapping("/doSelectFollow")
+    public ServerResponse doSelectFollow(String usersId){
+        return videosService.doSelectFollow(usersId);
+    }
 }

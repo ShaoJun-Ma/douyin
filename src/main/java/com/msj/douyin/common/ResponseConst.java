@@ -1,11 +1,13 @@
 package com.msj.douyin.common;
 
 public class ResponseConst {
-    public final static int SUCCESS_CODE = 1; //成功码
     public final static int ERROR_CODE = 0;  //错误码
+    public final static int SUCCESS_CODE = 1; //成功码
+    public final static int IS_CODE = 2; //已经存在
 
     public final static String REGISTER_SUCCESS_MSG = "注册成功";
     public final static String REGISTER_ERROR_MSG = "注册失败";
+    public final static String IS_REGISTER = "该用户已经注册";
 
     public final static String LOGIN_SUCCESS_MSG = "登录成功";
     public final static String LOGIN_ERROR_MSG = "登录失败";
@@ -70,4 +72,8 @@ public class ResponseConst {
 
     public final static String SELECT_USERS_FANS_ERROR = "该数据不存在";
     public final static String SELECT_USERS_FANS_SUCCESS = "已经关注过";
+
+
+    public final static String SELECT_ERROR = "查询失败";
+    public final static String SELECT_SUCCESS = "查询成功";
 }

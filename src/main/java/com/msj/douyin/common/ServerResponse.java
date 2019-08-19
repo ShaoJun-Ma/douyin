@@ -31,6 +31,10 @@ public class ServerResponse{
         return new ServerResponse(ResponseConst.ERROR_CODE,msg);
     }
 
+    public static ServerResponse createErrorByCodeAndMsg(int status,String msg){
+        return new ServerResponse(status,msg);
+    }
+
     public static ServerResponse createSuccess(String msg,Object data){
         return new ServerResponse(ResponseConst.SUCCESS_CODE,msg,data);
     }
