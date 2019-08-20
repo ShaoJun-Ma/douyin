@@ -38,7 +38,7 @@ public class VideosServiceImpl implements VideosService{
     @Autowired
     private UsersFansMapper usersFansMapper;
 
-    //发布过的作品
+    //获取作品列表
     @Override
     public ServerResponse  doSelectWork(String usersId){
         Videos videos = new Videos();
@@ -125,7 +125,9 @@ public class VideosServiceImpl implements VideosService{
                 usersAndVideos.setUsers(userOne);
                 usersAndVideosList.add(usersAndVideos);
             }
-            return usersAndVideosList;
+            if(usersAndVideosList!=null){
+                return usersAndVideosList;
+            }
         }
         return null;
     }
@@ -253,7 +255,7 @@ public class VideosServiceImpl implements VideosService{
         return users;
     }
 
-    //收藏过的videosList
+    //获取收藏列表
     @Override
     public ServerResponse doSelectLike(String usersId) {
         List<UsersAndVideos> usersAndVideosList = new ArrayList<>();

@@ -20,7 +20,7 @@ public class VideosController {
     @Autowired
     private VideosService videosService;
 
-    //发布过的作品
+    //获取作品列表
     @ApiOperation(value = "发布过的作品",notes = "发布过的作品的接口")
     @GetMapping("/doSelectWork")
     public ServerResponse doSelectWork(String usersId){
@@ -65,7 +65,7 @@ public class VideosController {
         return videosService.noLikeVideo(videoId, publishUserId,request);
     }
 
-    //已经收藏的videos
+    //获取收藏列表
     @ApiOperation(value = "收藏过的videosList",notes = "收藏过的videosList的接口")
     @GetMapping("/doSelectLike")
     public ServerResponse doSelectLike(String usersId){

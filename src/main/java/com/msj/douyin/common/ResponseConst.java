@@ -76,4 +76,7 @@ public class ResponseConst {
 
     public final static String SELECT_ERROR = "查询失败";
     public final static String SELECT_SUCCESS = "查询成功";
+
+    public final static String ADD_ERROR = "数据插入失败";
+    public final static String ADD_SUCCESS = "数据插入成功";
 }
