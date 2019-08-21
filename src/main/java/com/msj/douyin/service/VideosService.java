@@ -15,4 +15,5 @@ public interface VideosService {
     ServerResponse noLikeVideo(String videoId,String publishUserId,HttpServletRequest request);
     ServerResponse doSelectLike(String usersId);
     ServerResponse doSelectFollow(String usersId);
+    ServerResponse searchVideo(String content);
 }

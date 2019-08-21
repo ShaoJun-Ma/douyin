@@ -79,4 +79,8 @@ public class ResponseConst {
 
     public final static String ADD_ERROR = "数据插入失败";
     public final static String ADD_SUCCESS = "数据插入成功";
+
+    public final static String SEARCH_ERROR = "请输入查询内容";
+    public final static String SEARCH_SUCCESS = "查询成功";
+    public final static String SEARCH_NONE = "该资源不存在";
 }

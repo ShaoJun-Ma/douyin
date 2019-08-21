@@ -2,14 +2,8 @@ package com.msj.douyin.service.impl;
 
 import com.msj.douyin.common.ResponseConst;
 import com.msj.douyin.common.ServerResponse;
-import com.msj.douyin.mapper.UsersFansMapper;
-import com.msj.douyin.mapper.UsersLikeVideosMapper;
-import com.msj.douyin.mapper.UsersMapper;
-import com.msj.douyin.mapper.VideosMapper;
-import com.msj.douyin.pojo.Users;
-import com.msj.douyin.pojo.UsersFans;
-import com.msj.douyin.pojo.UsersLikeVideos;
-import com.msj.douyin.pojo.Videos;
+import com.msj.douyin.mapper.*;
+import com.msj.douyin.pojo.*;
 import com.msj.douyin.service.VideosService;
 import com.msj.douyin.vo.UsersAndVideos;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +31,8 @@ public class VideosServiceImpl implements VideosService{
     private UsersLikeVideosMapper usersLikeVideosMapper;
     @Autowired
     private UsersFansMapper usersFansMapper;
+    @Autowired
+    private SearchRecordsMapper searchRecordsMapper;
 
     //获取作品列表
     @Override
@@ -308,4 +304,51 @@ public class VideosServiceImpl implements VideosService{
         return ServerResponse.createSuccess(ResponseConst.SELECT_SUCCESS,usersAndVideosList);
     }
 
+    //搜索视频
+    @Override
+    public ServerResponse searchVideo(String content) {
+        if(content == null){
+            return ServerResponse.createErrorCodeMsg(ResponseConst.SEARCH_ERROR);
+        }
+        SearchRecords searchRecords = new SearchRecords();
+        searchRecords.setContent(content);
+        SearchRecords searchRecordsOne = searchRecordsMapper.selectOne(searchRecords);
+        if(searchRecordsOne == null){ //search_records没有该数据才插入，有的话就不插入
+            //插入数据到search_records
+            int resultCount = addSearchRecords(content);
+            if(resultCount <= 0){
+                return ServerResponse.createErrorCodeMsg(ResponseConst.ADD_ERROR);//添加失败
+            }
+        }
+        //根据视频的描述查询videos
+        List<UsersAndVideos> usersAndVideosList = selectVideosByDesc(content);
+        if(usersAndVideosList == null){
+            return ServerResponse.createErrorCodeMsg(ResponseConst.SEARCH_NONE);//该资源不存在
+        }
+        return ServerResponse.createSuccess(ResponseConst.SEARCH_SUCCESS,usersAndVideosList);//查询成功
+    }
+
+    //根据视频描述查询videos
+    private List<UsersAndVideos> selectVideosByDesc(String content){
+        List<Videos> videosList = videosMapper.selectByDesc(content);
+        List<UsersAndVideos> usersAndVideosList= new ArrayList<>();
+        for(Videos v:videosList){
+            UsersAndVideos usersAndVideos = new UsersAndVideos();
+            usersAndVideos.setVideos(v);
+            String userId = v.getUserId();
+            Users users = usersMapper.selectByPrimaryKey(userId);
+            usersAndVideos.setUsers(users);
+            usersAndVideosList.add(usersAndVideos);
+        }
+        return usersAndVideosList;
+    }
+
+    //插入数据到search_records
+    private int addSearchRecords(String content){
+        SearchRecords searchRecords = new SearchRecords();
+        searchRecords.setContent(content);
+        searchRecords.setId(String.valueOf(System.currentTimeMillis()));
+        int resultCount = searchRecordsMapper.insert(searchRecords);
+        return resultCount;
+    }
 }

@@ -78,4 +78,12 @@ public class VideosController {
     public ServerResponse doSelectFollow(String usersId){
         return videosService.doSelectFollow(usersId);
     }
+
+    //搜索视频
+    @ApiOperation(value = "搜索视频",notes = "搜索视频的接口")
+    @PostMapping("/searchVideo")
+    public ServerResponse searchVideo(String content){
+        return videosService.searchVideo(content);
+    }
+
 }

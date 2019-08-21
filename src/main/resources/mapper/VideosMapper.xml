@@ -18,4 +18,8 @@
     <result column="status" jdbcType="INTEGER" property="status" />
     <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
   </resultMap>
+
+  <select id="selectByDesc" parameterType="String" resultMap="BaseResultMap">
+    select * from videos where video_desc like CONCAT(CONCAT('%', #{content}), '%');
+  </select>
 </mapper>
