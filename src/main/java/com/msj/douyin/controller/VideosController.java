@@ -31,8 +31,8 @@ public class VideosController {
     @ApiOperation(value = "上传作品",notes = "上传作品的接口")
     @RequestMapping("/uploadVideo")
     public ServerResponse uploadVideo(MultipartFile mfile, HttpServletRequest request,
-                                      Videos videosData){
-        return videosService.uploadVideo(mfile,request,videosData);
+                                      Videos videosData,String bgmId){
+        return videosService.uploadVideo(mfile,request,videosData,bgmId);
     }
 
     //获取videos

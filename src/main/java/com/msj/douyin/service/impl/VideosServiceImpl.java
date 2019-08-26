@@ -5,8 +5,10 @@ import com.msj.douyin.common.ServerResponse;
 import com.msj.douyin.mapper.*;
 import com.msj.douyin.pojo.*;
 import com.msj.douyin.service.VideosService;
+import com.msj.douyin.utils.FFMpegUtil;
 import com.msj.douyin.vo.UsersAndVideos;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,6 +35,8 @@ public class VideosServiceImpl implements VideosService{
     private UsersFansMapper usersFansMapper;
     @Autowired
     private SearchRecordsMapper searchRecordsMapper;
+    @Autowired
+    private BgmMapper bgmMapper;
 
     //获取作品列表
     @Override
@@ -52,7 +56,7 @@ public class VideosServiceImpl implements VideosService{
     //上传作品
     @Override
     public ServerResponse uploadVideo(MultipartFile mfile, HttpServletRequest request,
-                                      Videos videosData) {
+                                      Videos videosData,String bgmId) {
         //将上传视频放在D:/douyin/videos/下面
         File file = new File("D:/douyin/videos/" + mfile.getOriginalFilename());
         File parentFile = file.getParentFile();
@@ -63,8 +67,25 @@ public class VideosServiceImpl implements VideosService{
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        //通过bgmId查询bgm路径
+        String bgmPath = selectBgmPath(bgmId);
+
+        //整合video和bgm
+        String videoInput = "D:\\douyin\\videos\\"+mfile.getOriginalFilename();
+        String mp3Input = "D:\\douyin\\bgms\\"+bgmPath;
+        Double seconds = videosData.getVideoSeconds().doubleValue();
+        String videoOuput = "D:\\douyin\\videos\\"+"new"+mfile.getOriginalFilename();
+        assembleVideoAndBgm(videoInput,mp3Input,seconds,videoOuput);
+
+        //ffmpeg获取封面图
+        String videoPath = "new"+mfile.getOriginalFilename();
+        String imagePath = System.currentTimeMillis()+".jpg";
+        String imgPath = "D:\\douyin\\images\\"+imagePath;
+        FFMpegUtil.processImg(videoOuput,imgPath);
+
         //获取新增videos信息
-        Videos videos = addVideos(mfile,request,videosData);
+        Videos videos = addVideos(videoPath,request,videosData,bgmId,imagePath);
         int resultCount = videosMapper.insert(videos);
         if(resultCount <= 0){
             log.info(ResponseConst.UPLOAD_WORK_ERROR);//上传作品失败
@@ -74,14 +95,33 @@ public class VideosServiceImpl implements VideosService{
         return ServerResponse.createSucessByCodeMsg(ResponseConst.UPLOAD_WORK_SUCCESS);
     }
 
+    //获取bgm路径
+    private String selectBgmPath(String bgmId){
+        Bgm bgm = bgmMapper.selectByPrimaryKey(bgmId);
+        String path = bgm.getPath();
+        String bgmPath = StringUtils.substringAfter(path,"/");
+        return bgmPath;
+    }
+
+    //整合video和bgm
+    private void assembleVideoAndBgm(String videoInput,String mp3Input,Double time,String videoOuput){
+        try {
+            FFMpegUtil.convertor(videoInput,mp3Input,time,videoOuput);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     //获取新增videos
-    private Videos addVideos(MultipartFile mfile,HttpServletRequest request,Videos videosData){
+    private Videos addVideos(String videoPath,HttpServletRequest request,
+                             Videos videosData,String bgmId,String imagePath){
         String usersId = request.getHeader("usersId");
         Videos videos = new Videos();
         videos.setId(String.valueOf(System.currentTimeMillis()));
         videos.setUserId(usersId);
+        videos.setAudioId(bgmId);
         videos.setVideoDesc(videosData.getVideoDesc());
-        videos.setVideoPath("/"+mfile.getOriginalFilename());
+        videos.setVideoPath("/"+videoPath);
         //获取视频长度、宽度、高度
         videos.setVideoSeconds(videosData.getVideoSeconds());
         videos.setVideoHeight(videosData.getVideoHeight());
@@ -89,6 +129,7 @@ public class VideosServiceImpl implements VideosService{
         videos.setLikeCounts(Long.valueOf("0"));
         videos.setStatus(1);
         videos.setCreateTime(new Date());
+        videos.setCoverPath("/"+imagePath);
         return videos;
     }
 

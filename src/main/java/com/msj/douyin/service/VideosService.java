@@ -8,7 +8,8 @@ import javax.servlet.http.HttpServletRequest;
 
 public interface VideosService {
     ServerResponse doSelectWork(String usersId);
-    ServerResponse uploadVideo(MultipartFile mfile, HttpServletRequest request, Videos videosData);
+    ServerResponse uploadVideo(MultipartFile mfile, HttpServletRequest request,
+                               Videos videosData,String bgmId);
     ServerResponse selectVideos();
     ServerResponse isCollect(String videoId,HttpServletRequest request);
     ServerResponse likeVideo(String videoId,String publishUserId,HttpServletRequest request);
